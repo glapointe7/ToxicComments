@@ -7,7 +7,7 @@ import string
 def GetWordFrequency(train_comments):
     return pandas.Series(' '.join(train_comments).lower().split()).value_counts()
 
-def remove_non_ascii_chars(text, ascii_chars):
+def ascii_chars_from_text(text, ascii_chars):
     for char in text:
         if char in ascii_chars:
             yield char
@@ -26,16 +26,11 @@ def clean_text(comments):
         comment = re.sub("\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}", "", comment)
         ## Remove usernames.
         comment = re.sub("\[\[.*\]", "", comment)
-        ## Remove special characters.
-        comment = re.sub("[“”¨«»®´·º½¾¿¡§£₤‘’]", "", comment)
+        comment = re.sub("[\$\*&%#]", "", comment)
         ## Remove punctuation.
         comment = re.sub('\W', ' ', comment)
-        comment = re.sub('\s+', ' ', comment)
         ## Remove non ascii characters.
-        comment = ''.join([char for char in remove_non_ascii_chars(comment, ascii_chars)])
-        
-        #translation = str.maketrans("", "", punctuation)
-        #comment = comment.translate(translation)
+        comment = ''.join([char for char in ascii_chars_from_text(comment, ascii_chars)])
 
         train_comments_cleaned.append(comment)
         
