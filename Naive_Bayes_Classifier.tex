@@ -20,7 +20,7 @@
     urlcolor=blue
 }
 
-
+\setlength\extrarowheight{6pt}
 
 
 \title{Naive Bayes Classifier Model}
@@ -33,7 +33,7 @@
 Let's say that we work with a dataset of $n$ observations (rows) and $m$ output classes where we want to classify $n$ texts.
 
 \subsection{Definitions and Notations}
-Let $X = (x_1,x_2,\ldots,x_n) \in \mathcal{T}^n$ be the multiset of texts where $\mathcal{T}$ is a multiset of words $(w_1, w_2, \ldots, w_k)$ defining a text. Note that the position of the texts in $X$ does not matter.
+Let $T = \{x_1,x_2,\ldots,x_n\}$ be the multiset of texts where every text $x_i$ is defined by a multiset of words $\{w_{i,1}, w_{i,2}, \ldots, w_{i,k_i}\}$. Note that the position of the texts in $X$ does not matter.
 
 We note 
 \begin{equation} \label{eq:ExplainedVariableMatrix}
@@ -74,69 +74,131 @@ We deduce the vectored equation
 \end{equation}
 where the operator $+$ is the element-wise matrix addition.
 
-Let $f : \mathcal{T}^n \longrightarrow \mathbb{M}_{n \times m}([0,1])$ be a model defined by $f(X) = \widehat{Y}$ where the notation $\mathbb{M}_{n \times m}([0,1])$ means the set of matrix $n$ by $m$ for which each element is a real number in $[0,1]$.
+Let $f : \mathcal{T} \longrightarrow \mathbb{M}_{n \times m}([0,1])$ be a model defined by $f(x) = \widehat{Y}$ where the notation $\mathbb{M}_{n \times m}([0,1])$ means the set of matrix $n$ by $m$ for which each element is a real number in $[0,1]$.
 
-The goal is to find a model $f$ such that the bias $\epsilon$ is minimized when $f$ is applied on $X$. Obtaining $\epsilon = \mathbf{0}_{n \times m}$ means that the model $f$ predict perfectly how the texts will be classified.
+The goal is to find a model $f$ such that the bias $\epsilon$ is minimized when $f$ is applied on $x$. Obtaining $\epsilon = \mathbf{0}_{n \times m}$ means that the model $f$ predict perfectly how the texts will be classified.
 
 
 \subsection{Theoretical Problem}
-Let $C = \{c_1,c_2,\ldots, c_m\}$ be the set of output class labels and $c \in C$ be an output class label. In virtue of the Bayes theorem, we have
+Let $C = \{c_1,c_2,\ldots, c_m\}$ be the set of all output class labels. We define the following random variables:
+\begin{itemize}
+	\item $c \in C$ representing an output class label;
+	\item $x \in T$ representing a text.
+\end{itemize}
+
+For a given text $x$, in virtue of the Bayes theorem, we have
 \begin{equation}
-	\mathbb{P}(c | X) = \frac{\mathbb{P}(X | c)\mathbb{P}(c)}{\mathbb{P}(X)}.
+	\mathbb{P}(c = c_j | x = x_i) = \frac{\mathbb{P}(x = x_i | c = c_j)\mathbb{P}(c = c_j)}{\mathbb{P}(x = x_i)}.
 \end{equation}
-The goal of the Naive Bayes Classification is to find the output class label $c$ that maximize the probability that a text $x_i \in X$ maps to the output class label $c$ knowing $X$. In other terms, this means that
-\begin{equation}
-	c_{max} = \arg\max_{c \in C} \mathbb{P}(c | X) = \arg\max_{c \in C} \frac{\mathbb{P}(X | c)\mathbb{P}(c)}{\mathbb{P}(X)}.
+The goal of the Naive Bayes Classification is to find the output class label $c$ that maximize the probability that a text $x \in T$ maps to the output class label $c_j$ knowing $x_i$. In other terms, this means that
+\begin{equation} \label{eq_CMax}
+	c_{max} = \arg\max_{c \in C} \mathbb{P}(c = c_j | x = x_i) = \arg\max_{c \in C} \frac{\mathbb{P}(x = x_i | c = c_j)\mathbb{P}(c = c_j)}{\mathbb{P}(x = x_i)}.
 \end{equation}
 
-We extract 2 properties that will simplify the equation of $c_{max}$:
+We extract 2 assumptions that will simplify the equation \eqref{eq_CMax}:
 \begin{enumerate}
-	\item $\mathbb{P}(X) = 1$ because the probability of having a text in $X$ is always $1$.
-	\item Two texts $x_i, x_j \in X$ where $i \neq j$ are independent. This implies that $\mathbb{P}(x_i | c)$ is independent of $\mathbb{P}(x_j | c)$.
+	\item $\mathbb{P}(x = x_i)$ is the same for all output class labels and does not affect the argmax which is on $c$.
+	\item Two texts $x_i, x_j \in T$ where $i \neq j$ are independent. This implies that $\mathbb{P}(x = x_i | c)$ is independent of $\mathbb{P}(x = x_j | c)$.
 \end{enumerate}
 
 Applying the first property gives
 \begin{equation}
-	c_{max} = \arg\max_{c \in C} \mathbb{P}(X | c)\mathbb{P}(c)
+	c_{max} = \arg\max_{c \in C} \mathbb{P}(x | c)\mathbb{P}(c)
 \end{equation}
-which can be written equivalently using the definition of $X$ as
+which can be written equivalently using the definition of $T$ as
 \begin{equation} \label{eq:ElementX_cmax}
-c_{max} = \arg\max_{c \in C} \mathbb{P}(x_1, x_2, \ldots, x_n | c)\mathbb{P}(c).
+c_{max} = \arg\max_{c \in C} \mathbb{P}(x = x_1, x = x_2, \ldots, x = x_n | c)\mathbb{P}(c).
 \end{equation}
 
 Now, applying the second property in \eqref{eq:ElementX_cmax} gives
 \begin{equation}
-	c_{max} = \arg\max_{c \in C} \mathbb{P}(c) \prod\limits_{i = 1}^n \mathbb{P}(x_i | c).
+	c_{max} = \arg\max_{c \in C} \mathbb{P}(c) \prod\limits_{i = 1}^n \mathbb{P}(x = x_i | c).
 \end{equation}
 
 
 \subsection{Bag of Words Model}
-Let $x_i = (w_{i,1}, w_{i,2}, \ldots, w_{i_k}) \in \mathcal{T}$ be a text containing $k$ words where a word $w_{i,j} \in W$ the set of words contained in $X$. Note that we assume that a text cannot be empty meaning that $\mathcal{T} \neq \emptyset$.
+Let $W$ be the set of words contained in $T$. Take $x_i = (w_{i,1}, w_{i,2}, \ldots, w_{i,k_i}) \in \mathcal{T}$ a text containing $k_i$ words where a word $w_{i,j} \in W$. We assume that a text cannot be empty meaning that $\mathcal{T} \neq \emptyset$.
 
-We want to use the maximum likelihood estimator $\widehat{P}$ defined as the frequency of a word $w_{i,j}$ among the $n$ texts where $1 \leq j \leq k$ knowing the output class label $c \in C$. The estimator $\widehat{P}$ estimates the likelihood function $P(x_1,x_2,\ldots,x_n ; c) = \prod\limits_{i=1}^n \mathbb{P}(x_i | c)$.
+We want to use the maximum likelihood estimator $\widehat{P}$ defined as the frequency of a word $w_{i,j}$ among the $n$ texts where $1 \leq j \leq k_i$ knowing the output class label $c_l \in C$. The estimator $\widehat{P}$ estimates the likelihood function $P(x_1,x_2,\ldots,x_n ; c) = \prod\limits_{i=1}^n \mathbb{P}(x = x_i | c = c_l)$.
 
-To calculate that frequency, we have to calculate the ratio between the number of occurrences of the word $w_{i,j}$ among the $n$ texts, where the output class label is $c$, and the total number of words in the $n$ texts where the output class label is $c$.
+To calculate that frequency, we have to calculate the ratio between the number of occurrences of the word $w_{i,j}$ among the $n$ texts, where the output class label is $c_j$, and the total number of words in the $n$ texts where the output class label is $c_j$.
 
-Let $f : W \times C \longrightarrow \mathbb{N}$ be a function defined as $f(w_{i,j}, c) = z$ that returns the number of occurrences ($z$) a word $w_{i,j}$ is found among all texts classified as the output class label $c$.
+Let $f : W \times C \longrightarrow \mathbb{N}$ be a function defined as $f(w_{i,j}, c_l) = z$ that returns the number of occurrences ($z$) a word $w_{i,j}$ is found among all texts classified as the output class label $c_l$.
 
 Therefore, the maximum likelihood estimator of $P(x_1,x_2,\ldots,x_n ; c)$ is defined as
-\begin{equation}
-	\widehat{P}(w_{i,j} \in X | c) = \frac{f(w_{i,j}, c) + 1}{\sum\limits_{w \in W} f(w, c) + 1}.
+\begin{equation} \label{eq:LikelihoodEstimatorWords}
+	\widehat{P}(w_{i,j} \in x_i | c) = \frac{f(w_{i,j}, c) + 1}{\sum\limits_{w \in W} f(w, c) + 1}.
 \end{equation}
 
-We also need the maximum likelihood estimator of $P(c) = \mathbb{P}(c)$ which is defined as the ratio between the number of texts classified as $c$ and the number of texts $n$. Let $C_c = \{x_i \in X : x_i \mapsto c\}$ be the set of all texts $x_i$ classified as $c$. 
+We also need the maximum likelihood estimator of $P(c = c_l) = \mathbb{P}(c = c_l)$ which is defined as the ratio between the number of texts classified as $c_l$ and the number of texts $n$. Let $T_c = \{x_i \in T : x_i \mapsto c_l\}$ be the set of all texts $x_i$ classified as $c_l$. 
 
-We note $|C_c|$ the cardinality of $C_c$. The estimator is defined as
+We note $|T_c|$ the cardinality of $T_c$. The estimator is defined as
 \begin{equation}
-	\widehat{P}(c) = \frac{|C_c|}{n}.
+	\widehat{P}(c = c_l) = \frac{|T_c|}{n}.
 \end{equation}
 
-The reason behind the Laplace smoothing, adding 1 to the numerator and denominator of $\widehat{P}(w_{i,j} \in X | c)$, is to handle the case when $f(w_{i,j}, c) = 0$. If a word $w_{i,j}$ is not found for a given output class label $c$, then $\widehat{P}(w_{i,j} \in X | c) = 0$. Having only one case like this without adding 1 causes 
+The reason behind the Laplace smoothing, adding 1 to the numerator and denominator of $\widehat{P}(w_{i,j} \in x_i | c)$, is to handle the case when $f(w_{i,j}, c) = 0$. If a word $w_{i,j}$ is not found for a given output class label $c_l$, then $\widehat{P}(w_{i,j} \in x_i | c) = 0$. Having only one case like this without adding 1 causes 
 \begin{equation}
-	\widehat{P}(c) \prod\limits_{i=1}^n \widehat{P}(w_{i,j} \in X | c) = 0.
+	\widehat{P}(c) \prod\limits_{i=1}^n \widehat{P}(w_{i,j} \in x_i | c) = 0.
 \end{equation}
 
 
 \subsection{Example}
+In this example, we want to classify texts as toxic or non toxic. Suppose that we have the train dataset \ref{tbl:TrainDataset} where the texts have already been cleaned.
+\begin{table}[!htb] 
+  \caption{Train Dataset} \label{tbl:TrainDataset}
+  \centering
+  \begin{tabular}{|>{\raggedright}m{50mm} | m{15mm} |} \hline
+     \multicolumn{1}{|>{\centering}m{50mm}|}{\cellcolor{black!30}\textbf{Text}} 
+   & \multicolumn{1}{|>{\centering}m{15mm}|}{\cellcolor{black!30}\textbf{Is Toxic}} \\ \hline
+    fuck fuck fuck shit shit & 1 \\ \hline
+    explanation natural processing language matter & 0 \\ \hline
+    hell fuck die mother fuck shit & 1 \\ \hline
+    block pollution environment climate natural & 0 \\ \hline
+    mother fuck stupid piece shit & 1 \\ \hline
+  \end{tabular}
+\end{table}
+
+We have to predict if the text \textit{shit language yourself hell fuck shit} is toxic or not.
+
+From the dataset \ref{tbl:TrainDataset} including the text to classify, we set $T = \{x_1, x_2, x_3, x_4, x_5, x_t\}$ as
+\begin{align*}
+	x_1 &= \{fuck, fuck, fuck, shit, shit\} \\
+	x_2 &= \{explanation, natural, processing, language, matter\} \\
+	x_3 &= \{hell, fuck, die, mother, fuck, shit\} \\
+	x_4 &= \{block, pollution, environment, climate, natural, mother\} \\
+	x_5 &= \{mother, fuck, stupid, piece, shit\} \\
+	x_t &= \{shit, language, yourself, hell, fuck, shit\}.
+\end{align*}
+where $x_t$ is the text to classify. The output classes are $Y = (1,0,1,0,1)$.
+
+Let $W = \{fuck, shit, explanation, natural, processing, language, matter, hell,$ $ die, mother, block, pollution, environment, climate, stupid, piece, yourself\}$ be the set of words used in $T$. We have $|W| = 17$. Let $W_t$ be the multiset of words in texts classified as toxic and $W_n$ the multiset of words in texts classified as non toxic. Thus, we have $|W_t| = 16$ and $|W_n| = 11$.
+
+Let $c \in C = \{\texttt{"toxic"}, \texttt{"non toxic"}\}$ be the random variable representing an output class label and $w \in W$ the random variable representing a word.
+\begin{align*}
+	\widehat{P}(w = \texttt{"fuck"} | c = \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{6 + 1}{16 + 17} = \frac{7}{33} = 0.2121 \\
+	\widehat{P}(w = \texttt{"shit"} | c = \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{4 + 1}{16 + 17} = \frac{5}{33} = 0.1515 \\
+	\widehat{P}(w = \texttt{"hell"} | c = \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{1 + 1}{16 + 17} = \frac{2}{33} = 0.0606 \\
+	\widehat{P}(w = \texttt{"die"} | c = \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{1 + 1}{16 + 17} = \frac{2}{33} = 0.0606 \\
+	\widehat{P}(w = \texttt{"mother"} | \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{2 + 1}{16 + 17} = \frac{3}{33} = 0.0909 \\
+	\widehat{P}(w = \texttt{"stupid"} | c = \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{1 + 1}{16 + 17} = \frac{2}{33} = 0.0606 \\
+	\widehat{P}(w = \texttt{"piece"} | c = \texttt{"toxic"}) &= \frac{f(w, c)+1}{|W_t| + |W|} = \frac{1 + 1}{16 + 17} = \frac{2}{33} = 0.0606 \\
+	\widehat{P}(w = \texttt{"mother"} | c = \texttt{"non toxic"}) &= \frac{f(w, c)+1}{|W_n| + |W|} = \frac{1 + 1}{11 + 17} = \frac{2}{28} = 0.0714 \\
+	\widehat{P}(w = \texttt{"natural"} | c = \texttt{"non toxic"}) &= \frac{f(w, c)+1}{|W_n| + |W|} = \frac{2 + 1}{11 + 17} = \frac{3}{28} = 0.1071
+\end{align*}
+
+Note that for a word $w \in \{explanation, processing, language, matter, block, $ $pollution, environment, climate\}$, the probability is $\widehat{P}(w | c = \texttt{"non toxic"}) = 0.0714$ and $\widehat{P}(w | c = \texttt{"toxic"}) = 0.0303$.
+
+Since the dataset contains 2 texts classified as toxic and 3 texts as non toxic, we have
+\begin{align*}
+	\widehat{P}(c = \texttt{"toxic"}) &= \frac{3}{5} = 0.6 \\
+	\widehat{P}(c = \texttt{"non toxic"}) &= \frac{2}{5} = 0.4.
+\end{align*}
+Let's predict in which output class label $x_t$ is classified. We use the equation \eqref{eq:LikelihoodEstimatorWords}.
+\begin{align*}
+	\widehat{P}(c = \texttt{"toxic"} | x = x_t) &= 0.6 \times 0.1515^2 \times 0.0303 \times 0.0303 \times 0.0606 \times 0.2121 \\ &= 0.000000163 \\
+	\widehat{P}(c = \texttt{"non toxic"} | x = x_t) &= 0.4 \times 0.0357^2 \times 0.0714 \times 0.0357 \times 0.0357 \times 0.0357 \\ &= 0.000000002
+\end{align*}
+It follows that $x_t$ is classified as a toxic text.
 
 \end{document}
